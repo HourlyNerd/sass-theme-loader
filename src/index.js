@@ -18,12 +18,7 @@ class StylePackagerPlugin {
             return;
         }
         const outputDir = this.outputDir;
-        compiler.plugin('after-emit', (compilation) => {
-            Object.keys(compilation.assets).forEach(function (assetRelpath) {
-                var existsAt = compilation.assets[assetRelpath].existsAt;
-                console.log('existsAt', existsAt);
-            });
-        });
+
         compiler.plugin('compilation', (compilation) => {
             compilation.plugin('after-optimize-tree' , (chunks, modules) => {
                 const stylesOutDir = path.join('dist', STYLE_SOURCE_DIR);
@@ -76,7 +71,7 @@ class StylePackagerPlugin {
                         return order.length;
                     }
                 });
-
+                
                 const getPackagePath = (stylePath) => {
                     const parts = path.dirname(stylePath).split('node_modules');
                     const packagename = parts.pop().match(/([^\/]+)/)[1];

@@ -1,6 +1,6 @@
 {
   "name": "sass-theme-loader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "internal tool to keep track of all scss files and their deps",
   "main": "dist/index.js",
   "scripts": {

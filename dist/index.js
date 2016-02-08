@@ -45,12 +45,7 @@ var StylePackagerPlugin = (function () {
                 return;
             }
             var outputDir = this.outputDir;
-            compiler.plugin('after-emit', function (compilation) {
-                Object.keys(compilation.assets).forEach(function (assetRelpath) {
-                    var existsAt = compilation.assets[assetRelpath].existsAt;
-                    console.log('existsAt', existsAt);
-                });
-            });
+
             compiler.plugin('compilation', function (compilation) {
                 compilation.plugin('after-optimize-tree', function (chunks, modules) {
                     var stylesOutDir = _path2['default'].join('dist', STYLE_SOURCE_DIR);
