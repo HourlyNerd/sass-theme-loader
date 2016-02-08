@@ -1,0 +1,22 @@
+{
+  "name": "sass-theme-loader",
+  "version": "0.1.0",
+  "description": "internal tool to keep track of all scss files and their deps",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rm -rf ./dist && mkdir dist && babel src --stage 0 --out-dir dist",
+    "prepublish": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "webpack",
+    "webpack-loader"
+  ],
+  "author": "misha koryak",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "6.0.4",
+    "lodash": "4.3.0",
+    "sander": "0.4.0"
+  }
+}
