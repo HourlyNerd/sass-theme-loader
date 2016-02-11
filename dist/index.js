@@ -98,12 +98,13 @@ var StylePackagerPlugin = (function () {
                     });
                     records = _lodash2['default'].sortBy(_lodash2['default'].uniqBy(records, 'resource'), function (it) {
                         var idx = order.indexOf(it.resource);
-                        if (idx >= 0) {
+                        if (it.resource.match(/\/_?vendor\.scss$/)) {
+                            //resourceOrder isnt actually gauaranteed to be any good. this is a shitty hack
+                            return -2;
+                        } else if (idx >= 0) {
                             return idx;
                         } else if (it.resource.match(/\.css$/)) {
                             return -1;
-                        } else if (it.resource.match(/vendor\.scss$/)) {
-                            return -2;
                         } else {
                             return order.length;
                         }

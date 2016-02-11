@@ -63,13 +63,13 @@ class StylePackagerPlugin {
                 const order = [...resourceOrder].map(it => relativizePath(it))
                 records = _.sortBy(_.uniqBy(records, 'resource'), (it) => {
                     const idx = order.indexOf(it.resource);
-                    if(idx >= 0){
-                        return idx;
-                    } else if(it.resource.match(/\.css$/)){
-                        return -1;
-                    }  else if(it.resource.match(/vendor\.scss$/)){
+                    if (it.resource.match(/\/_?vendor\.scss$/)) {
                         //resourceOrder isnt actually gauaranteed to be any good. this is a shitty hack
                         return -2;
+                    } else if (idx >= 0) {
+                        return idx;
+                    } else if (it.resource.match(/\.css$/)) {
+                        return -1;
                     } else {
                         return order.length;
                     }
