@@ -105,6 +105,10 @@ var StylePackagerPlugin = (function () {
                         } else {
                             return order.length;
                         }
+                    }).map(function (it) {
+                        //css resources which were not in the order list will get included since they are deps of the scss
+                        it.exclude = order.indexOf(it.resource) < 0 && it.resource.match(/\.css$/);
+                        return it;
                     });
 
                     var getPackagePath = function getPackagePath(stylePath) {
