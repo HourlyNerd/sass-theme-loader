@@ -102,12 +102,14 @@ var StylePackagerPlugin = (function () {
                             return idx;
                         } else if (it.resource.match(/\.css$/)) {
                             return -1;
+                        } else if (it.resource.match(/vendor\.scss$/)) {
+                            return -2;
                         } else {
                             return order.length;
                         }
                     }).map(function (it) {
                         //css resources which were not in the order list will get included since they are deps of the scss
-                        it.exclude = order.indexOf(it.resource) < 0 && it.resource.match(/\.css$/);
+                        it.exclude = !!(order.indexOf(it.resource) < 0 && it.resource.match(/\.css$/));
                         return it;
                     });
 

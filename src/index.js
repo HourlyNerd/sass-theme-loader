@@ -67,12 +67,15 @@ class StylePackagerPlugin {
                         return idx;
                     } else if(it.resource.match(/\.css$/)){
                         return -1;
+                    }  else if(it.resource.match(/vendor\.scss$/)){
+                        //resourceOrder isnt actually gauaranteed to be any good. this is a shitty hack
+                        return -2;
                     } else {
                         return order.length;
                     }
                 }).map(it => {
                     //css resources which were not in the order list will get included since they are deps of the scss
-                    it.exclude = order.indexOf(it.resource) < 0 && it.resource.match(/\.css$/);
+                    it.exclude = !!(order.indexOf(it.resource) < 0 && it.resource.match(/\.css$/));
                     return it;
                 });
                 
