@@ -26,6 +26,9 @@ var STYLE_SOURCE_DIR = '.style-source';
 var CODMAGIC_START = ' ><> codmagic';
 var stylesOutDir = _path2['default'].join('dist', STYLE_SOURCE_DIR);
 
+// collapse paths so that no matter how deep a node_module is, it will be put at STYLE_SOURCE_DIR/node_modules
+// everything else gets rooted at STYLE_SOURCE_DIR/dir
+// there is a special case for hn-core in case you are npm linking to it and its not in node_modules
 var relativizePath = function relativizePath(outputDir, stylePath) {
     if (stylePath.match(/node_modules/)) {
         return _path2['default'].join(stylesOutDir, 'node_modules', stylePath.split('node_modules').pop());
@@ -36,6 +39,8 @@ var relativizePath = function relativizePath(outputDir, stylePath) {
     }
 };
 
+// this is the magical loader that marks the path of each resource in the final output css. this is the only reliable
+// way that i found to figure out the final import order.
 var loader = function loader(source) {
     this.cacheable && this.cacheable();
     if (this.resourcePath.match(/\.scss$/)) {
@@ -120,11 +125,11 @@ var StylePackagerPlugin = (function () {
                                     return; //dont copy assets out of package's node_modules, they are unlikely to be needed
                                 }
                                 var to = _path2['default'].join(getPackagePath(deps[stylePath]), _path2['default'].relative(packagePath, from));
-                                _sander2['default'].copyFileSync(from, { encoding: 'utf-8' }).to(_path2['default'].join(outputDir, to), { encoding: 'utf-8' });
+                                _sander2['default'].copyFileSync(from).to(_path2['default'].join(outputDir, to));
                             });
                         })();
                     } else {
-                        _sander2['default'].copyFileSync(stylePath, { encoding: 'utf-8' }).to(_path2['default'].join(outputDir, deps[stylePath]), { encoding: 'utf-8' });
+                        _sander2['default'].copyFileSync(stylePath).to(_path2['default'].join(outputDir, deps[stylePath]), { encoding: 'utf-8' });
                     }
                 });
                 _sander2['default'].writeFileSync(_path2['default'].join(outputDir, stylesOutDir, 'records.json'), JSON.stringify(records, null, 4));

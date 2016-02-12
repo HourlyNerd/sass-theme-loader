@@ -7,6 +7,9 @@ const STYLE_SOURCE_DIR = '.style-source';
 const CODMAGIC_START = ' ><> codmagic';
 const stylesOutDir = path.join('dist', STYLE_SOURCE_DIR);
 
+// collapse paths so that no matter how deep a node_module is, it will be put at STYLE_SOURCE_DIR/node_modules
+// everything else gets rooted at STYLE_SOURCE_DIR/dir
+// there is a special case for hn-core in case you are npm linking to it and its not in node_modules
 const relativizePath = (outputDir, stylePath) => {
     if(stylePath.match(/node_modules/)){
         return path.join(stylesOutDir, 'node_modules', stylePath.split('node_modules').pop());
@@ -17,7 +20,8 @@ const relativizePath = (outputDir, stylePath) => {
     }
 };
 
-
+// this is the magical loader that marks the path of each resource in the final output css. this is the only reliable
+// way that i found to figure out the final import order.
 const loader = function(source) {
     this.cacheable && this.cacheable();
     if(this.resourcePath.match(/\.scss$/)){
@@ -52,7 +56,6 @@ class StylePackagerPlugin {
 
         compiler.plugin('done', (stats) => {
 
-
             ///////////////////////// begin hacky cod /////////////////////
             // TODO: cheating at 11pm. we can figure out this filename from some object we have access to in here!
             // no really, this needs to be fixed before it breaks
@@ -60,7 +63,6 @@ class StylePackagerPlugin {
             // TODO: well, i started writing hacky cod, might as well continue!!
             const cssFileBody = sander.readFileSync(path.join(outputDir, 'dist', cssFilename), {encoding:'utf8'});
             /////////////////////// end hacky cod ////////////////////////
-
 
             const order = [];
             cssFileBody.replace(RegExp(`/\\*!${CODMAGIC_START} ([^\\s]+?) !\\*/`, 'gm'), (poop, res) => {
@@ -98,10 +100,10 @@ class StylePackagerPlugin {
                             return; //dont copy assets out of package's node_modules, they are unlikely to be needed
                         }
                         const to = path.join(getPackagePath(deps[stylePath]), path.relative(packagePath, from));
-                        sander.copyFileSync(from, {encoding: 'utf-8'}).to(path.join(outputDir, to), {encoding: 'utf-8'});
+                        sander.copyFileSync(from).to(path.join(outputDir, to));
                     });
                 } else {
-                    sander.copyFileSync(stylePath, {encoding: 'utf-8'}).to(path.join(outputDir, deps[stylePath]), {encoding: 'utf-8'});
+                    sander.copyFileSync(stylePath).to(path.join(outputDir, deps[stylePath]), {encoding: 'utf-8'});
                 }
             });
             sander.writeFileSync(path.join(outputDir, stylesOutDir, 'records.json'), JSON.stringify(records, null, 4));
