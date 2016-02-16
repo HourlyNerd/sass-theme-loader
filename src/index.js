@@ -68,7 +68,7 @@ class StylePackagerPlugin {
             cssFileBody.replace(RegExp(`/\\*!${CODMAGIC_START} ([^\\s]+?) !\\*/`, 'gm'), (poop, res) => {
                 order.push(res);
             });
-            records = _.sortBy(_.uniqBy(records, 'resource'), (it) => {
+            records = _.sortBy(_.uniq(records, 'resource'), (it) => {
                 const idx = order.indexOf(it.resource);
                 if (idx >= 0) {
                     return idx;

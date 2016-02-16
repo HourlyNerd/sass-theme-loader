@@ -92,7 +92,7 @@ var StylePackagerPlugin = (function () {
                 cssFileBody.replace(RegExp('/\\*!' + CODMAGIC_START + ' ([^\\s]+?) !\\*/', 'gm'), function (poop, res) {
                     order.push(res);
                 });
-                records = _lodash2['default'].sortBy(_lodash2['default'].uniqBy(records, 'resource'), function (it) {
+                records = _lodash2['default'].sortBy(_lodash2['default'].uniq(records, 'resource'), function (it) {
                     var idx = order.indexOf(it.resource);
                     if (idx >= 0) {
                         return idx;
