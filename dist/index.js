@@ -85,7 +85,15 @@ var StylePackagerPlugin = (function () {
                 // no really, this needs to be fixed before it breaks
                 var cssFilename = 'css/app-' + stats.toJson().hash + '.min.css';
                 // TODO: well, i started writing hacky cod, might as well continue!!
-                var cssFileBody = _sander2['default'].readFileSync(_path2['default'].join(outputDir, 'dist', cssFilename), { encoding: 'utf8' });
+                var cssFileBody = undefined;
+                try {
+                    cssFileBody = _sander2['default'].readFileSync(_path2['default'].join(outputDir, 'dist', cssFilename), { encoding: 'utf8' });
+                } catch (e) {
+                    console.log('!!!!!!ERROR reading app css file at:', cssFilename, e);
+                    console.error('!! Could not read app css for themeing. This is likely because there was an error in your sass and the file never got made.', e);
+                    _sander2['default'].writeFileSync(_path2['default'].join(outputDir, stylesOutDir, 'records.json'), JSON.stringify({ error: 'could not open ' + cssFilename, 'message:': e.message }, null, 4));
+                    return;
+                }
                 /////////////////////// end hacky cod ////////////////////////
 
                 var order = [];
@@ -133,6 +141,11 @@ var StylePackagerPlugin = (function () {
                     }
                 });
                 _sander2['default'].writeFileSync(_path2['default'].join(outputDir, stylesOutDir, 'records.json'), JSON.stringify(records, null, 4));
+                //const concatted = "";
+                //records.map(({resource}) => {
+                //    concatted += fs.readFileSync(path.join(outputDir,resource), 'utf8') + "\n\n";
+                //});
+                //sander.writeFileSync(path.join(outputDir, stylesOutDir, 'index.scss'), JSON.stringify(records, null, 4));
             });
             compiler.plugin('compilation', function (compilation) {
                 compilation.plugin('after-optimize-tree', function (chunks, modules) {
