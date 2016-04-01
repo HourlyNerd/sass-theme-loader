@@ -2,6 +2,7 @@ import sander from 'sander';
 import path from 'path';
 import _ from 'lodash';
 import glob from 'glob';
+import thematic from './../thematic'
 
 const STYLE_SOURCE_DIR = '.style-source';
 const CODMAGIC_START = ' ><> codmagic';
@@ -34,7 +35,9 @@ const loader = function(source) {
 };
 
 class StylePackagerPlugin {
-    constructor(enabled, outputDir){
+    constructor(enabled, includePaths, useBrianMethod){
+        this.useBrianMethod = useBrianMethod; //use new themeing tech
+        this.includePaths = includePaths;
         this.enabled = enabled;
     }
 
@@ -55,6 +58,8 @@ class StylePackagerPlugin {
 
 
         compiler.plugin('done', (stats) => {
+
+            console.log("!!using brian theme method:", !!this.useBrianMethod);
 
             ///////////////////////// begin hacky cod /////////////////////
             // TODO: cheating at 11pm. we can figure out this filename from some object we have access to in here!
@@ -96,7 +101,7 @@ class StylePackagerPlugin {
 
             sander.rimrafSync(path.join(outputDir, stylesOutDir));
             Object.keys(deps).forEach((stylePath) => {
-                if(stylePath.match(/\.css$/)){
+                if(!this.useBrianMethod && stylePath.match(/\.css$/)){
                     // webpack is annoying and doesnt tell me about deps of css files, so i must copy the whole package
                     const packagePath = getPackagePath(stylePath);
                     const searchGlob = path.join(packagePath, "/**/*.+(png|gif|jpeg|jpg|ttf|eot|svg|otf|woff|woff2)");
@@ -110,10 +115,40 @@ class StylePackagerPlugin {
                         const to = path.join(getPackagePath(deps[stylePath]), path.relative(packagePath, from));
                         sander.copyFileSync(from).to(path.join(outputDir, to));
                     });
+                } else if(this.useBrianMethod && stylePath.match(/.scss$/) && !stylePath.match(/\/_?colors\.scss$/)){
+                    try {
+                        //"@import 'colors';\n"+
+                        const themeSass = thematic.parseSassSync({
+                            file: stylePath,
+                            varsData: '{}',
+                            themeFunctions: '["color"]',
+                            includePaths: this.includePaths,
+                            treeRemoval: true,
+                            varsRemoval: true,
+                            template: false
+                        });
+                        thematic.parseSassSync({
+                            data: themeSass,
+                            varsData: '{}',
+                            includePaths: this.includePaths,
+                        }); //2nd pass because first pass sometimes produces invalid sass 0_o
+                        sander.writeFileSync(path.join(outputDir, deps[stylePath]), themeSass);
+                    } catch(e){
+                        console.log("thematic has beefs:", deps[stylePath], e);
+                        sander.copyFileSync(stylePath).to(path.join(outputDir, deps[stylePath]));
+                    }
                 } else {
-                    sander.copyFileSync(stylePath).to(path.join(outputDir, deps[stylePath]), {encoding: 'utf-8'});
+                    sander.copyFileSync(stylePath).to(path.join(outputDir, deps[stylePath]));
                 }
             });
+            if(this.useBrianMethod){
+                const name = path.join(outputDir, stylesOutDir, "core_app.css");
+                sander.writeFileSync(name, cssFileBody);
+                records.unshift({
+                    "resource": "dist/.style-source/core_app.css",
+                    "deps": []
+                })
+            }
             sander.writeFileSync(path.join(outputDir, stylesOutDir, 'records.json'), JSON.stringify(records, null, 4));
             //const concatted = "";
             //records.map(({resource}) => {

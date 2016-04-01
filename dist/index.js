@@ -22,6 +22,10 @@ var _glob = require('glob');
 
 var _glob2 = _interopRequireDefault(_glob);
 
+var _thematic = require('./../thematic');
+
+var _thematic2 = _interopRequireDefault(_thematic);
+
 var STYLE_SOURCE_DIR = '.style-source';
 var CODMAGIC_START = ' ><> codmagic';
 var stylesOutDir = _path2['default'].join('dist', STYLE_SOURCE_DIR);
@@ -53,15 +57,19 @@ var loader = function loader(source) {
 };
 
 var StylePackagerPlugin = (function () {
-    function StylePackagerPlugin(enabled, outputDir) {
+    function StylePackagerPlugin(enabled, includePaths, useBrianMethod) {
         _classCallCheck(this, StylePackagerPlugin);
 
+        this.useBrianMethod = useBrianMethod; //use new themeing tech
+        this.includePaths = includePaths;
         this.enabled = enabled;
     }
 
     _createClass(StylePackagerPlugin, [{
         key: 'apply',
         value: function apply(compiler) {
+            var _this = this;
+
             if (!this.enabled) {
                 return;
             }
@@ -79,6 +87,8 @@ var StylePackagerPlugin = (function () {
             });
 
             compiler.plugin('done', function (stats) {
+
+                console.log("!!using brian theme method:", !!_this.useBrianMethod);
 
                 ///////////////////////// begin hacky cod /////////////////////
                 // TODO: cheating at 11pm. we can figure out this filename from some object we have access to in here!
@@ -120,7 +130,7 @@ var StylePackagerPlugin = (function () {
 
                 _sander2['default'].rimrafSync(_path2['default'].join(outputDir, stylesOutDir));
                 Object.keys(deps).forEach(function (stylePath) {
-                    if (stylePath.match(/\.css$/)) {
+                    if (!_this.useBrianMethod && stylePath.match(/\.css$/)) {
                         (function () {
                             // webpack is annoying and doesnt tell me about deps of css files, so i must copy the whole package
                             var packagePath = getPackagePath(stylePath);
@@ -136,10 +146,40 @@ var StylePackagerPlugin = (function () {
                                 _sander2['default'].copyFileSync(from).to(_path2['default'].join(outputDir, to));
                             });
                         })();
+                    } else if (_this.useBrianMethod && stylePath.match(/.scss$/) && !stylePath.match(/\/_?colors\.scss$/)) {
+                        try {
+                            //"@import 'colors';\n"+
+                            var themeSass = _thematic2['default'].parseSassSync({
+                                file: stylePath,
+                                varsData: '{}',
+                                themeFunctions: '["color"]',
+                                includePaths: _this.includePaths,
+                                treeRemoval: true,
+                                varsRemoval: true,
+                                template: false
+                            });
+                            _thematic2['default'].parseSassSync({
+                                data: themeSass,
+                                varsData: '{}',
+                                includePaths: _this.includePaths
+                            }); //2nd pass because first pass sometimes produces invalid sass 0_o
+                            _sander2['default'].writeFileSync(_path2['default'].join(outputDir, deps[stylePath]), themeSass);
+                        } catch (e) {
+                            console.log("thematic has beefs:", deps[stylePath], e);
+                            _sander2['default'].copyFileSync(stylePath).to(_path2['default'].join(outputDir, deps[stylePath]));
+                        }
                     } else {
-                        _sander2['default'].copyFileSync(stylePath).to(_path2['default'].join(outputDir, deps[stylePath]), { encoding: 'utf-8' });
+                        _sander2['default'].copyFileSync(stylePath).to(_path2['default'].join(outputDir, deps[stylePath]));
                     }
                 });
+                if (_this.useBrianMethod) {
+                    var _name = _path2['default'].join(outputDir, stylesOutDir, "core_app.css");
+                    _sander2['default'].writeFileSync(_name, cssFileBody);
+                    records.unshift({
+                        "resource": "dist/.style-source/core_app.css",
+                        "deps": []
+                    });
+                }
                 _sander2['default'].writeFileSync(_path2['default'].join(outputDir, stylesOutDir, 'records.json'), JSON.stringify(records, null, 4));
                 //const concatted = "";
                 //records.map(({resource}) => {
