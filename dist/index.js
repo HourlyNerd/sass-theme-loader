@@ -22,10 +22,6 @@ var _glob = require('glob');
 
 var _glob2 = _interopRequireDefault(_glob);
 
-var _thematic = require('./../thematic');
-
-var _thematic2 = _interopRequireDefault(_thematic);
-
 var STYLE_SOURCE_DIR = '.style-source';
 var CODMAGIC_START = ' ><> codmagic';
 var stylesOutDir = _path2['default'].join('dist', STYLE_SOURCE_DIR);
@@ -60,6 +56,7 @@ var StylePackagerPlugin = (function () {
     function StylePackagerPlugin(enabled, includePaths, useBrianMethod) {
         _classCallCheck(this, StylePackagerPlugin);
 
+        console.log("bitches and hows", arguments);
         this.useBrianMethod = useBrianMethod; //use new themeing tech
         this.includePaths = includePaths;
         this.enabled = enabled;
@@ -87,9 +84,6 @@ var StylePackagerPlugin = (function () {
             });
 
             compiler.plugin('done', function (stats) {
-
-                console.log("!!using brian theme method:", !!_this.useBrianMethod);
-
                 ///////////////////////// begin hacky cod /////////////////////
                 // TODO: cheating at 11pm. we can figure out this filename from some object we have access to in here!
                 // no really, this needs to be fixed before it breaks
@@ -146,28 +140,6 @@ var StylePackagerPlugin = (function () {
                                 _sander2['default'].copyFileSync(from).to(_path2['default'].join(outputDir, to));
                             });
                         })();
-                    } else if (_this.useBrianMethod && stylePath.match(/.scss$/) && !stylePath.match(/\/_?colors\.scss$/)) {
-                        try {
-                            //"@import 'colors';\n"+
-                            var themeSass = _thematic2['default'].parseSassSync({
-                                file: stylePath,
-                                varsData: '{}',
-                                themeFunctions: '["color"]',
-                                includePaths: _this.includePaths,
-                                treeRemoval: true,
-                                varsRemoval: true,
-                                template: false
-                            });
-                            _thematic2['default'].parseSassSync({
-                                data: themeSass,
-                                varsData: '{}',
-                                includePaths: _this.includePaths
-                            }); //2nd pass because first pass sometimes produces invalid sass 0_o
-                            _sander2['default'].writeFileSync(_path2['default'].join(outputDir, deps[stylePath]), themeSass);
-                        } catch (e) {
-                            console.log("thematic has beefs:", deps[stylePath], e);
-                            _sander2['default'].copyFileSync(stylePath).to(_path2['default'].join(outputDir, deps[stylePath]));
-                        }
                     } else {
                         _sander2['default'].copyFileSync(stylePath).to(_path2['default'].join(outputDir, deps[stylePath]));
                     }
@@ -181,11 +153,6 @@ var StylePackagerPlugin = (function () {
                     });
                 }
                 _sander2['default'].writeFileSync(_path2['default'].join(outputDir, stylesOutDir, 'records.json'), JSON.stringify(records, null, 4));
-                //const concatted = "";
-                //records.map(({resource}) => {
-                //    concatted += fs.readFileSync(path.join(outputDir,resource), 'utf8') + "\n\n";
-                //});
-                //sander.writeFileSync(path.join(outputDir, stylesOutDir, 'index.scss'), JSON.stringify(records, null, 4));
             });
             compiler.plugin('compilation', function (compilation) {
                 compilation.plugin('after-optimize-tree', function (chunks, modules) {
