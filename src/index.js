@@ -35,7 +35,6 @@ const loader = function(source) {
 
 class StylePackagerPlugin {
     constructor(enabled, includePaths, useBrianMethod){
-        console.log("bitches and hows", arguments)
         this.useBrianMethod = useBrianMethod; //use new themeing tech
         this.includePaths = includePaths;
         this.enabled = enabled;
