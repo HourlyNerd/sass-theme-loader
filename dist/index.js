@@ -56,7 +56,6 @@ var StylePackagerPlugin = (function () {
     function StylePackagerPlugin(enabled, includePaths, useBrianMethod) {
         _classCallCheck(this, StylePackagerPlugin);
 
-        console.log("bitches and hows", arguments);
         this.useBrianMethod = useBrianMethod; //use new themeing tech
         this.includePaths = includePaths;
         this.enabled = enabled;
